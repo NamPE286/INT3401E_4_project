@@ -17,9 +17,3 @@ def load_corpus() -> List[str]:
                 reviews.append(review)
 
     return reviews
-
-
-if __name__ == "__main__":
-    corpus = load_corpus()
-    print(len(corpus))
-    print(corpus[:10])
