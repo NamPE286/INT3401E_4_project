@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
-class MiniBertConfig:
+class BertConfig:
     vocab_size: int
     max_seq_len: int = 128
     hidden_size: int = 128
