@@ -12,13 +12,15 @@ def create_mlm_sample(
     mask_id = vocab.get("[MASK]", 0)
 
     for i, token_id in enumerate(input_ids):
-        if random.random() < mask_prob:
-            labels[i] = token_id 
-            rand = random.random()
-            masked_ids[i] = (
-                mask_id
-                if rand < 0.8
-                else random.choice(vocab_ids) if rand < 0.9 else token_id
-            )
+        if random.random() >= mask_prob:
+            continue
+        
+        labels[i] = token_id 
+        rand = random.random()
+        masked_ids[i] = (
+            mask_id
+            if rand < 0.8
+            else random.choice(vocab_ids) if rand < 0.9 else token_id
+        )
 
     return masked_ids, labels
