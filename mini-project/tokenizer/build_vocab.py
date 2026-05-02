@@ -1,13 +1,6 @@
 from collections import Counter
 from typing import Dict, List
-
-SPECIAL_TOKENS = [
-    "[PAD]",
-    "[UNK]",
-    "[CLS]",
-    "[SEP]",
-    "[MASK]",
-]
+from const.special_token import SPECIAL_TOKENS
 
 
 def build_vocab(
