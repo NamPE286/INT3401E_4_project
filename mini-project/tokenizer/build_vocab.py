@@ -1,17 +1,16 @@
 from collections import Counter
-from typing import Dict, List
 from const.special_token import SPECIAL_TOKENS
 
 
 def build_vocab(
-    tokenized_corpus: List[List[str]], vocab_size: int = 10000
-) -> Dict[str, int]:
+    tokenized_corpus: list[list[str]], vocab_size: int = 10000
+) -> dict[str, int]:
     counter = Counter()
 
     for tokens in tokenized_corpus:
         counter.update(tokens)
 
-    vocab: Dict[str, int] = {}
+    vocab: dict[str, int] = {}
 
     for token in SPECIAL_TOKENS:
         vocab[token] = len(vocab)

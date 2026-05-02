@@ -1,4 +1,2 @@
-from typing import List
-
-def tokenize(s: str) -> List[str]:
+def tokenize(s: str) -> list[str]:
     return s.split()
