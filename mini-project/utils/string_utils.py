@@ -18,7 +18,10 @@ def clean(s: str) -> List[str]:
     for part in parts:
         text = html.unescape(part)
         text = _HTML_TAG_RE.sub(" ", text)
-        text = re.sub(r"\s+", " ", text).strip()
+        text = text.lower()
+        text = re.sub(r"[^a-z0-9\s]", " ", text)
+        text = re.sub(r"\s+", " ", text)
+        
         if text:
             cleaned_parts.append(text)
 
