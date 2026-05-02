@@ -4,6 +4,7 @@ import csv
 from pathlib import Path
 from typing import List
 from utils.string_utils import clean
+from tokenizer.basic_tokenizer import tokenize
 
 
 def load_corpus() -> List[str]:
@@ -18,3 +19,11 @@ def load_corpus() -> List[str]:
                 reviews += clean(review)
 
     return reviews
+
+def load_tokenized_corpus() -> List[List[str]]:
+    tokenized_corpus = []
+    
+    for i in load_corpus():
+        tokenized_corpus.append(tokenize(i))
+        
+    return tokenized_corpus
