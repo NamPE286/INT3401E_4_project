@@ -16,7 +16,7 @@ def load_corpus() -> List[str]:
         for row in reader:
             review = row.get("review", "")
             if review is not None:
-                reviews += clean(review)
+                reviews.extend(clean(review))
 
     return reviews
 
