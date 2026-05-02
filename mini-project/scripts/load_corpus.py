@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 from pathlib import Path
 from typing import List
+from utils.string_utils import clean
 
 
 def load_corpus() -> List[str]:
@@ -14,6 +15,6 @@ def load_corpus() -> List[str]:
         for row in reader:
             review = row.get("review", "")
             if review is not None:
-                reviews.append(review)
+                reviews += clean(review)
 
     return reviews
