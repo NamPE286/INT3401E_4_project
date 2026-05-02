@@ -1,33 +1,42 @@
 import random
 
+import torch
+from torch import Tensor
+
 import const.special_token as token
 from const.mlm import IGNORE_INDEX
 
 
 def create_mlm_sample(
-    input_ids: list[int],
+    input_ids: Tensor,
     vocab: dict[str, int],
     mask_prob: float = 0.15,
-) -> tuple[list[int], list[int]]:
-    masked_ids = list(input_ids)
-    labels = [IGNORE_INDEX] * len(input_ids)
+) -> tuple[Tensor, Tensor]:
+    masked_ids = input_ids.clone()
+    labels = torch.full_like(input_ids, IGNORE_INDEX)
 
     mask_id = vocab[token.MASK]
 
-    special_token_ids = {
-        vocab[special]
-        for special in token.SPECIAL_TOKENS
-        if special in vocab
-    }
+    vocab_ids = torch.tensor(
+        tuple(vocab.values()),
+        dtype=input_ids.dtype,
+        device=input_ids.device,
+    )
+    special_token_ids = torch.tensor(
+        tuple(
+            vocab[special]
+            for special in token.SPECIAL_TOKENS
+            if special in vocab
+        ),
+        dtype=input_ids.dtype,
+        device=input_ids.device,
+    )
 
-    candidate_vocab_ids = [
-        token_id
-        for token_id in vocab.values()
-        if token_id not in special_token_ids
-    ]
+    candidate_vocab_ids = vocab_ids[~torch.isin(vocab_ids, special_token_ids)]
+    special_token_mask = torch.isin(input_ids, special_token_ids)
 
     for i, token_id in enumerate(input_ids):
-        if token_id in special_token_ids:
+        if bool(special_token_mask[i]):
             continue
 
         if random.random() >= mask_prob:

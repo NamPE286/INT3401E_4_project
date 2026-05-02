@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import torch
 from torch import Tensor
 from torch.utils.data import Dataset
 
@@ -41,7 +40,7 @@ class MLMDataset(Dataset[dict[str, Tensor]]):
         )
 
         return {
-            "input_ids": torch.tensor(masked_ids, dtype=torch.long),
-            "attention_mask": torch.tensor(attention_mask, dtype=torch.long),
-            "labels": torch.tensor(labels, dtype=torch.long),
+            "input_ids": masked_ids,
+            "attention_mask": attention_mask,
+            "labels": labels,
         }

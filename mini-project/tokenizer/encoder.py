@@ -1,3 +1,8 @@
+from __future__ import annotations
+
+import torch
+from torch import Tensor
+
 import const.special_token as token
 
 
@@ -5,7 +10,7 @@ def encode_tokens(
     tokens: list[str],
     vocab: dict[str, int],
     max_seq_len: int = 128,
-) -> tuple[list[int], list[int]]:
+) -> tuple[Tensor, Tensor]:
     if max_seq_len < 2:
         raise ValueError("max_len must be at least 2")
 
@@ -14,13 +19,16 @@ def encode_tokens(
     unk_id = vocab[token.UNK]
     pad_id = vocab[token.PAD]
 
-    input_ids = [vocab.get(token, unk_id) for token in sequence_tokens]
+    encoded_tokens = torch.tensor(
+        [vocab.get(token, unk_id) for token in sequence_tokens],
+        dtype=torch.long,
+    )
 
-    attention_mask = [1] * len(input_ids)
+    input_ids = torch.full((max_seq_len,), pad_id, dtype=torch.long)
+    attention_mask = torch.zeros(max_seq_len, dtype=torch.long)
 
-    pad_count = max_seq_len - len(input_ids)
-
-    input_ids.extend([pad_id] * pad_count)
-    attention_mask.extend([0] * pad_count)
+    seq_len = encoded_tokens.size(0)
+    input_ids[:seq_len] = encoded_tokens
+    attention_mask[:seq_len] = 1
 
     return input_ids, attention_mask
