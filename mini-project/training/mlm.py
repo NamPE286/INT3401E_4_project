@@ -1,6 +1,7 @@
 import random
+import const.special_token as token
+from const.mlm import IGNORE_INDEX
 
-IGNORE_INDEX = -100
 
 def create_mlm_sample(
     input_ids: list[int],
@@ -10,12 +11,20 @@ def create_mlm_sample(
     masked_ids, labels = list(input_ids), [IGNORE_INDEX] * len(input_ids)
     vocab_ids = list(vocab.values())
     mask_id = vocab.get("[MASK]", 0)
+    special_token_ids = {
+        vocab[special]
+        for special in token.SPECIAL_TOKENS
+        if special in vocab
+    }
 
     for i, token_id in enumerate(input_ids):
+        if token_id in special_token_ids:
+            continue
+
         if random.random() >= mask_prob:
             continue
-        
-        labels[i] = token_id 
+
+        labels[i] = token_id
         rand = random.random()
         masked_ids[i] = (
             mask_id
