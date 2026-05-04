@@ -70,8 +70,8 @@ def train_epoch(
         )
 
         loss = loss_fn(
-            logits.view(-1, logits.size(-1)),
-            batch["labels"].view(-1),
+            logits.reshape(-1, logits.size(-1)),
+            batch["labels"].reshape(-1),
         )
 
         loss.backward()
