@@ -333,7 +333,48 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         legal moves.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        bestAction = None
+        bestValue = float('-inf')
+        for action in gameState.getLegalActions(0):
+            succState = gameState.generateSuccessor(0, action)
+            value = self.expectimax(succState, 1, 0)
+            if value > bestValue:
+                bestValue = value
+                bestAction = action
+        return bestAction
+    def expectimax(self, gameState: GameState, agentIndex: int, depth: int):
+        if gameState.isWin() or gameState.isLose() or depth == self.depth:
+            return self.evaluationFunction(gameState)
+
+        if agentIndex == 0:  # Pacman → maximize
+            return self.maxValue(gameState, agentIndex, depth)
+        else:  # Ghost → expectation 
+            return self.expValue(gameState, agentIndex, depth)
+
+    def maxValue(self, gameState: GameState, agentIndex: int, depth: int):
+        """Pacman's best move"""
+        value = float('-inf')
+        for action in gameState.getLegalActions(agentIndex):
+            succState = gameState.generateSuccessor(agentIndex, action)
+            nextAgent, newDepth = self._nextAgentDepth(agentIndex, depth, gameState)
+            value = max(value, self.expectimax(succState, nextAgent, newDepth))
+        return value
+
+    def expValue(self, gameState: GameState, agentIndex: int, depth: int):
+        legalActions = gameState.getLegalActions(agentIndex)
+        prob = 1.0 / len(legalActions)
+        value = 0.0
+        for action in legalActions:
+            succState = gameState.generateSuccessor(agentIndex, action)
+            nextAgent, newDepth = self._nextAgentDepth(agentIndex, depth, gameState)
+            value += prob * self.expectimax(succState, nextAgent, newDepth)
+        return value
+
+    def _nextAgentDepth(self, agentIndex: int, depth: int, gameState: GameState):
+        nextAgent = agentIndex + 1
+        if nextAgent == gameState.getNumAgents(): 
+            return 0, depth + 1
+        return nextAgent, depth
 
 def betterEvaluationFunction(currentGameState: GameState):
     """
@@ -343,7 +384,61 @@ def betterEvaluationFunction(currentGameState: GameState):
     DESCRIPTION: <write something here so we know what you did>
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    pacPos       = currentGameState.getPacmanPosition()
+    foodList     = currentGameState.getFood().asList()
+    ghostStates  = currentGameState.getGhostStates()
+    capsules     = currentGameState.getCapsules()
+    walls        = currentGameState.getWalls()
+    score        = currentGameState.getScore()
+
+    def bfsMinFoodDist(start, foods):
+        """BFS searches for the nearest food along the actual path, not blocked by walls."""
+        if not foods:
+            return 0
+        foodSet = set(foods)
+        from util import Queue
+        q = Queue()
+        q.push((start, 0))
+        visited = {start}
+        while not q.isEmpty():
+            pos, dist = q.pop()
+            if pos in foodSet:
+                return dist
+            x, y = pos
+            for dx, dy in [(1,0),(-1,0),(0,1),(0,-1)]:
+                nx, ny = x+dx, y+dy
+                npos = (nx, ny)
+                if npos not in visited and not walls[nx][ny]:
+                    visited.add(npos)
+                    q.push((npos, dist+1))
+        return float('inf')
+
+    minFoodDist = bfsMinFoodDist(pacPos, foodList)
+    foodScore   = 10.0 / (minFoodDist + 1)  # +1 when standing on food
+
+    ghostScore = 0
+    for ghost in ghostStates:
+        dist = manhattanDistance(pacPos, ghost.getPosition())
+        if ghost.scaredTimer > 0:
+            if dist < ghost.scaredTimer:
+                ghostScore += 200.0 / (dist + 1)   
+            else:
+                ghostScore += 5.0 / (dist + 1)     
+        else:
+            # Active ghost
+            if dist == 0:
+                ghostScore -= 9999  
+            elif dist <= 1:
+                ghostScore -= 500
+            elif dist <= 3:
+                ghostScore -= 150.0 / dist
+            else:
+                ghostScore -= 3.0 / dist
+
+    foodPenalty    = -5  * len(foodList)
+    capsulePenalty = -25 * len(capsules)
+
+    return score + foodScore + ghostScore + foodPenalty + capsulePenalty
 
 # Abbreviation
 better = betterEvaluationFunction
