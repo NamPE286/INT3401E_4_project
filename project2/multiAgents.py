@@ -60,10 +60,10 @@ class ReflexAgent(Agent):
         GameStates (pacman.py) and returns a number, where higher numbers are better.
 
         The evaluation function considers four values: 
-        + distanceValue - distance between Pacman and food
-        + timeValue - the amount of time all the ghosts are in scared state.
+        + distanceToFoodValue - distance between Pacman and food
+        + ghostScaredTimeValue - the amount of time all the ghosts are in scared state.
         + ghostDistanceValue - distance between Pacman and all the food
-        + foodReward - consuming food will be prioritised
+        + foodRewardValue - consuming food will be prioritised
 
         Evalutation function is designed so that Pacman prioritises maximizing score by eating as much food as possible.
         Though if the distance with ghosts are sufficiently close, Pacman will prioritise avoiding instead.
@@ -80,40 +80,47 @@ class ReflexAgent(Agent):
          # Return a list of ghost's scared timer
         "*** YOUR CODE HERE ***"
         import numpy as np
+        distanceToFoodValue = 0
+        ghostScaredTimeValue = 0
+        foodRewardValue= 0
+        ghostDistanceValue = 0
         finalValue = 0
+
         distance = 10000
         rightNextToGhost = False
         for food in newFood.asList():
             newDistance = manhattanDistance(food, newPos)
             if distance > newDistance:
                 distance = newDistance
-        distanceValue = 1 / (distance) # The closer pacman is to the closest food, the higher the value
+        distanceToFoodValue = 1 / (distance) # The closer pacman is to the closest food, the higher the value
 
-        timeValue = 0
+        ghostScaredTimeValue = 0
         for time in newScaredTimes:
-            timeValue += time # the more time the ghosts are in scared state, the higher the score
+            ghostScaredTimeValue += time # the more time the ghosts are in scared state, the higher the score
         
         ghostDistanceValue = 0
         for ghost in newGhostStates:
             manhDistance = manhattanDistance(ghost.getPosition(), newPos)
-            if manhDistance <= 2:
-                rightNextToGhost = True
             if ghost.scaredTimer == 0:  # ghost is dangerous
-                ghostDistanceValue -= 1 / (manhDistance + 1)  # the farther the ghosts are, the lower the score
+                if manhDistance <= 2:
+                    rightNextToGhost = True
+                ghostDistanceValue -= 1 / (manhDistance + 1)  # If ghost is dangerous, the value goes down
             else:  # ghost is scared
-                ghostDistanceValue += 1 / (manhDistance + 1)    # reward chasing scared ghosts
+                ghostDistanceValue += 1 / (manhDistance + 1)    # If ghost is not dangerous, can also prioritise eating ghost.
 
         # Reward for eating food, arose from the problem of Pacman constantly moving between 2 food items without ever committing to eat
         # either of them
         foodLeft = successorGameState.getFood().count()
         foodEaten = currentGameState.getFood().count() - foodLeft
-        foodReward = 5000*foodEaten  # big bonus for actually consuming food
+        foodRewardValue = 5000*foodEaten  # big bonus for actually consuming food
 
-        finalValue = 2500*distanceValue + 10000*timeValue + 500*ghostDistanceValue + foodReward 
-        # distance to food weighs more than distance to ghosts
         if rightNextToGhost:
-            finalValue = 2500*distanceValue + 10000*timeValue + 500000*ghostDistanceValue + foodReward 
+            finalValue = 2500*distanceToFoodValue + 10000*ghostScaredTimeValue + 500000*ghostDistanceValue + foodRewardValue 
             # prioritise ghost distancing if they're close
+        else: 
+            # distance to food weighs more than distance to ghosts otherwise
+            finalValue = 2500*distanceToFoodValue + 10000*ghostScaredTimeValue + 500*ghostDistanceValue + foodRewardValue 
+
         if (action == Directions.STOP):
             finalValue -= 1000
         return finalValue
